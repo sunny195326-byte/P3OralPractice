@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>口试练习 - 课室里的情景</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: #f0f4ff;
+    color: #333;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #4f8cff 0%, #7c5cfc 100%);
+    color: #fff;
+    text-align: center;
+    padding: 32px 16px 28px;
+    box-shadow: 0 4px 20px rgba(79,140,255,0.3);
+  }
+  .header h1 { font-size: 28px; font-weight: 700; letter-spacing: 2px; }
+  .header .subtitle { margin-top: 8px; font-size: 15px; opacity: 0.85; }
+
+  /* SECTION TITLES */
+  .section-title {
+    max-width: 960px;
+    margin: 28px auto 18px;
+    padding: 0 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #4f8cff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .icon { font-size: 24px; }
+
+  /* PRACTICE BUTTONS GRID */
+  .practice-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    max-width: 960px;
+    margin: 0 auto 32px;
+    padding: 0 20px;
+  }
+  .practice-btn {
+    background: #fff;
+    border: 2px solid #e0e7ff;
+    border-radius: 14px;
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #4f8cff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .practice-btn:hover {
+    background: linear-gradient(135deg, #4f8cff 0%, #7c5cfc 100%);
+    color: #fff;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79,140,255,0.25);
+  }
+  .practice-btn .num {
+    display: inline-flex;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #e0e7ff;
+    color: #4f8cff;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .practice-btn:hover .num { background: rgba(255,255,255,0.25); color: #fff; }
+
+  /* FANCY DIVIDER */
+  .divider {
+    max-width: 960px;
+    margin: 10px auto 10px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #b8c9ff 30%, #7c5cfc 50%, #b8c9ff 70%, transparent);
+    border-radius: 2px;
+  }
+  .divider .diamond {
+    width: 10px; height: 10px;
+    background: linear-gradient(135deg, #4f8cff, #7c5cfc);
+    transform: rotate(45deg);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* VOCAB GRID */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 18px;
+    max-width: 960px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+
+  /* CARD */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(79,140,255,0.18);
+  }
+  .card .thumb { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .card .label { padding: 10px 8px 12px; text-align: center; width: 100%; }
+  .card .pinyin { font-size: 12px; color: #7c5cfc; font-weight: 500; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .card .hanzi { font-size: 20px; font-weight: 700; color: #222; }
+
+  /* MODAL OVERLAY (shared) */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.2s;
+  }
+  .modal-overlay.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: slideUp 0.25s ease-out;
+    position: relative;
+  }
+  .modal .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.06);
+    color: #555;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    z-index: 10;
+  }
+  .modal .close-btn:hover { background: rgba(0,0,0,0.12); }
+  .modal .modal-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    border-radius: 20px 20px 0 0;
+  }
+  .modal .modal-body { padding: 24px 24px 28px; text-align: center; }
+  .modal .modal-pinyin { font-size: 18px; color: #7c5cfc; font-weight: 500; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .modal .modal-hanzi { font-size: 36px; font-weight: 800; color: #222; margin-bottom: 20px; }
+
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #4f8cff 0%, #7c5cfc 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 32px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 16px rgba(79,140,255,0.3);
+  }
+  .play-btn:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(79,140,255,0.4); }
+  .play-btn:active { transform: scale(0.97); }
+  .play-btn .icon { font-size: 22px; }
+
+  /* PRACTICE MODAL */
+  .practice-modal {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: slideUp 0.25s ease-out;
+    position: relative;
+  }
+  .practice-modal .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.06);
+    color: #555;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    z-index: 10;
+  }
+  .practice-modal .close-btn:hover { background: rgba(0,0,0,0.12); }
+  .practice-modal .pm-header {
+    background: linear-gradient(135deg, #4f8cff 0%, #7c5cfc 100%);
+    color: #fff;
+    padding: 24px 50px 24px 28px;
+    border-radius: 20px 20px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .practice-modal .pm-body {
+    padding: 28px 28px 32px;
+  }
+  .practice-modal .sentence-block {
+    font-size: 22px;
+    line-height: 2.4;
+    color: #222;
+    margin-bottom: 24px;
+  }
+  .practice-modal .sentence-block ruby {
+    ruby-align: center;
+  }
+  .practice-modal .sentence-block rt {
+    font-size: 11px;
+    color: #7c5cfc;
+    font-weight: 500;
+  }
+  .practice-modal .pm-play-row {
+    text-align: center;
+  }
+
+  /* ===== TAB SYSTEM ===== */
+  .tab-section {
+    max-width: 960px;
+    margin: 0 auto 40px;
+    padding: 0 20px;
+  }
+  .big-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+  }
+  .big-tab {
+    flex: 1;
+    padding: 16px 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid #e0e7ff;
+    background: #fff;
+    color: #7c5cfc;
+    transition: all 0.2s;
+  }
+  .big-tab:first-child { border-radius: 14px 0 0 0; border-right: none; }
+  .big-tab:last-child { border-radius: 0 14px 0 0; }
+  .big-tab.active {
+    background: linear-gradient(135deg, #4f8cff 0%, #7c5cfc 100%);
+    color: #fff;
+    border-color: transparent;
+  }
+  .big-tab-content {
+    display: none;
+    background: #fff;
+    border: 2px solid #e0e7ff;
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    padding: 0;
+  }
+  .big-tab-content.active { display: block; }
+
+  .small-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e0e7ff;
+  }
+  .small-tab {
+    flex: 1;
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #999;
+    background: #f8f9ff;
+    border-right: 1px solid #e0e7ff;
+    transition: all 0.2s;
+  }
+  .small-tab:last-child { border-right: none; }
+  .small-tab.active {
+    color: #4f8cff;
+    background: #fff;
+    border-bottom: 3px solid #4f8cff;
+    margin-bottom: -2px;
+  }
+  .small-tab-content {
+    display: none;
+    padding: 24px;
+  }
+  .small-tab-content.active { display: block; }
+
+  .tab-text-block {
+    font-size: 20px;
+    line-height: 2.2;
+    color: #222;
+    margin-bottom: 20px;
+  }
+  .tab-text-block ruby { ruby-align: center; }
+  .tab-text-block rt {
+    font-size: 10px;
+    color: #7c5cfc;
+    font-weight: 500;
+  }
+  .tab-speaker-row { text-align: center; }
+  .tab-speaker-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #4f8cff 0%, #7c5cfc 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 14px rgba(79,140,255,0.3);
+  }
+  .tab-speaker-btn:hover { transform: scale(1.05); }
+  .tab-speaker-btn:active { transform: scale(0.97); }
+  .tab-speaker-btn .icon { font-size: 20px; }
+
+  /* FOOTER */
+  .footer { text-align: center; padding: 20px; color: #aaa; font-size: 13px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 14px; }
+    .practice-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 14px; }
+    .header h1 { font-size: 22px; }
+    .card .hanzi { font-size: 17px; }
+    .modal .modal-hanzi { font-size: 28px; }
+    .practice-modal .sentence-block { font-size: 19px; line-height: 2.2; }
+    .practice-modal .pm-body { padding: 20px 18px 24px; }
+    .tab-text-block { font-size: 17px; line-height: 2; }
+    .small-tab { font-size: 13px; padding: 10px 6px; }
+    .big-tab { font-size: 16px; padding: 14px 10px; }
+    .tab-section { padding: 0 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>课室里的情景</h1>
+  <div class="subtitle">口试练习 - 句式训练与词汇学习</div>
+</div>
+
+<!-- ===== TOP: PRACTICE SECTION ===== -->
+<div class="section-title"><span class="icon">&#128221;</span> 句式练习</div>
+<div class="practice-grid" id="practiceGrid"></div>
+
+<!-- ===== DIVIDER ===== -->
+<div class="divider"><div class="diamond"></div><div class="diamond"></div><div class="diamond"></div></div>
+
+<!-- ===== BOTTOM: VOCABULARY SECTION ===== -->
+<div class="section-title"><span class="icon">&#128218;</span> 词汇学习</div>
+<div class="grid" id="grid"></div>
+
+<!-- VOCAB MODAL -->
+<div class="modal-overlay" id="vocabOverlay">
+  <div class="modal">
+    <button class="close-btn" onclick="closeVocabModal()">&times;</button>
+    <img class="modal-img" id="vocabModalImg" src="" alt="">
+    <div class="modal-body">
+      <div class="modal-pinyin" id="vocabModalPinyin"></div>
+      <div class="modal-hanzi" id="vocabModalHanzi"></div>
+      <button class="play-btn" id="vocabPlayBtn"><span class="icon">&#9654;</span><span>播放读音</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- PRACTICE MODAL -->
+<div class="modal-overlay" id="practiceOverlay">
+  <div class="practice-modal">
+    <button class="close-btn" onclick="closePracticeModal()">&times;</button>
+    <div class="pm-header" id="pmHeader"></div>
+    <div class="pm-body">
+      <div class="sentence-block" id="pmSentence"></div>
+      <div class="pm-play-row">
+        <button class="play-btn" id="practicePlayBtn"><span class="icon">&#9654;</span><span>播放朗读</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIVIDER 2 ===== -->
+<div class="divider"><div class="diamond"></div><div class="diamond"></div><div class="diamond"></div></div>
+
+<!-- ===== TAB SECTION ===== -->
+<div class="section-title"><span class="icon">&#128214;</span> 答题练习</div>
+<div class="tab-section">
+  <div class="big-tabs">
+    <div class="big-tab active" onclick="switchBigTab(0)">&#128444; 看图说话</div>
+    <div class="big-tab" onclick="switchBigTab(1)">&#128172; 会话</div>
+  </div>
+
+  <!-- 看图说话 content -->
+  <div class="big-tab-content active" id="bigTab0">
+    <div class="small-tabs">
+      <div class="small-tab active" onclick="switchSmallTab(0,0)">开头</div>
+      <div class="small-tab" onclick="switchSmallTab(0,1)">描述图意</div>
+      <div class="small-tab" onclick="switchSmallTab(0,2)">总结</div>
+    </div>
+    <div class="small-tab-content active" id="st0_0"></div>
+    <div class="small-tab-content" id="st0_1"></div>
+    <div class="small-tab-content" id="st0_2"></div>
+  </div>
+
+  <!-- 会话 content -->
+  <div class="big-tab-content" id="bigTab1">
+    <div class="small-tabs">
+      <div class="small-tab active" onclick="switchSmallTab(1,0)">个人经历</div>
+      <div class="small-tab" onclick="switchSmallTab(1,1)">感受</div>
+      <div class="small-tab" onclick="switchSmallTab(1,2)">看法</div>
+    </div>
+    <div class="small-tab-content active" id="st1_0"></div>
+    <div class="small-tab-content" id="st1_1"></div>
+    <div class="small-tab-content" id="st1_2"></div>
+  </div>
+</div>
+
+<div class="footer">口试词汇练习</div>
+
+<script>
+const practiceItems = [
+  {
+    label: "Practice 1",
+    audio: "audio/practice1.mp3",
+    pinyin: "zhè lǐ shì kè shì, zhè fú tú miáo huì de shì kè shì lǐ de qíng jǐng",
+    text: "这里是课室，这幅图描绘的是课室里的情景"
+  },
+  {
+    label: "Practice 2",
+    audio: "audio/practice2.mp3",
+    pinyin: "zhè lǐ yǒu hěn duō rén, yǒu de zài sǎo dì, yǒu de zài cā bái bǎn",
+    text: "这里有很多人，有的在扫地，有的在擦白板"
+  },
+  {
+    label: "Practice 3",
+    audio: "audio/practice3.mp3",
+    pinyin: "wǒ rèn wéi xiàn zài shì fàng xué shí jiān",
+    text: "我认为现在是放学时间。"
+  },
+  {
+    label: "Practice 4",
+    audio: "audio/practice4.mp3",
+    pinyin: "zhè lǐ shì kè shì. zhè lǐ yǒu hěn duō rén, yǒu de zài sǎo dì, yǒu de zài cā bái bǎn. wǒ rèn wéi xiàn zài shì fàng xué shí jiān.",
+    text: "这里是课室。这里有很多人，有的在扫地，有的在擦白板。我认为现在是放学时间。"
+  },
+  {
+    label: "Practice 5",
+    audio: "audio/practice5.mp3",
+    pinyin: "zài tú piàn de zhōng jiān, wǒ kàn dào liǎng gè nǚ hái zài sǎo dì",
+    text: "在图片的中间，我看到两个女孩在扫地。"
+  },
+  {
+    label: "Practice 6",
+    audio: "audio/practice6.mp3",
+    pinyin: "zài tú piàn de zhōng jiān, wǒ kàn dào liǎng gè nǚ hái zài sǎo dì. wǒ rèn wéi tā men zhè me zuò shì duì de, yīn wèi tā men ràng kè shì biàn gān jìng.",
+    text: "在图片的中间，我看到两个女孩在扫地。我认为他们这么做是对的，因为她们让课室变干净。"
+  },
+  {
+    label: "Practice 7",
+    audio: "audio/practice7.mp3",
+    pinyin: "zài tú piàn de zhōng jiān, wǒ kàn dào liǎng gè nǚ hái zài sǎo dì. wǒ rèn wéi tā men zhè me zuò shì duì de, yīn wèi tā men ràng kè shì biàn gān jìng. kàn dào tā men zhè me zuò, wǒ jué de hěn kāi xīn. rú guǒ wǒ zài xiàn chǎng, wǒ huì shù qǐ dà mǔ zhǐ kuā jiǎng tā men.",
+    text: "在图片的中间，我看到两个女孩在扫地。我认为他们这么做是对的，因为她们让课室变干净。看到她们这么做，我觉得很开心。如果我在现场，我会竖起大拇指夸奖她们。"
+  },
+  {
+    label: "Practice 8",
+    audio: "audio/practice8.mp3",
+    pinyin: "zhè lǐ shì kè shì. zhè lǐ yǒu hěn duō rén, yǒu de zài sǎo dì, yǒu de zài cā bái bǎn. wǒ rèn wéi xiàn zài shì fàng xué shí jiān. zài tú piàn de zhōng jiān, wǒ kàn dào liǎng gè nǚ hái zài sǎo dì. wǒ rèn wéi tā men zhè me zuò shì duì de, yīn wèi tā men ràng kè shì biàn gān jìng. kàn dào tā men zhè me zuò, wǒ jué de hěn kāi xīn. rú guǒ wǒ zài xiàn chǎng, wǒ huì shù qǐ dà mǔ zhǐ kuā jiǎng tā men.",
+    text: "这里是课室。这里有很多人，有的在扫地，有的在擦白板。我认为现在是放学时间。在图片的中间，我看到两个女孩在扫地。我认为他们这么做是对的，因为她们让课室变干净。看到她们这么做，我觉得很开心。如果我在现场，我会竖起大拇指夸奖她们。"
+  }
+];
+
+const vocabItems = [
+  { hanzi: "课室",       pinyin: "kè shì",               img: "images/keshi.png",              audio: "audio/keshi.mp3" },
+  { hanzi: "水桶",       pinyin: "shuǐ tǒng",            img: "images/shuitong.png",           audio: "audio/shuitong.mp3" },
+  { hanzi: "抹布",       pinyin: "mā bù",                 img: "images/mabu.png",               audio: "audio/mabu.mp3" },
+  { hanzi: "生气",       pinyin: "shēng qì",              img: "images/shengqi.png",            audio: "audio/shengqi.mp3" },
+  { hanzi: "擦白板",     pinyin: "cā bái bǎn",            img: "images/cabaiban.png",           audio: "audio/cabaiban.mp3" },
+  { hanzi: "扫地",       pinyin: "sǎo dì",                img: "images/saodi.png",              audio: "audio/saodi.mp3" },
+  { hanzi: "你追我跑",   pinyin: "nǐ zhuī wǒ pǎo",       img: "images/nizhuiwopao.png",        audio: "audio/nizhuiwopao.mp3" },
+  { hanzi: "抹窗户",     pinyin: "mā chuāng hù",          img: "images/machuanghu.png",         audio: "audio/machuanghu.mp3" },
+  { hanzi: "扫把",       pinyin: "sào bǎ",                img: "images/saoba.png",              audio: "audio/saoba.mp3" },
+  { hanzi: "受伤",       pinyin: "shòu shāng",            img: "images/shoushang.png",          audio: "audio/shoushang.mp3" },
+  { hanzi: "站在椅子上", pinyin: "zhàn zài yǐ zi shàng",  img: "images/zhanzaiyizishang.png",   audio: "audio/zhanzaiyizishang.mp3" },
+  { hanzi: "扶着椅子",   pinyin: "fú zhe yǐ zi",          img: "images/fuzheyizi.png",          audio: "audio/fuzheyizi.mp3" },
+  { hanzi: "跌倒",       pinyin: "diē dǎo",               img: "images/diedao.png",             audio: "audio/diedao.mp3" },
+  { hanzi: "危险",       pinyin: "wēi xiǎn",              img: "images/weixian.png",            audio: "audio/weixian.mp3" },
+  { hanzi: "打翻水桶",   pinyin: "dǎ fān shuǐ tǒng",     img: "images/dafanshuitong.png",      audio: "audio/dafanshuitong.mp3" },
+  { hanzi: "阻止",       pinyin: "zǔ zhǐ",                img: "images/zuzhi.png",              audio: "audio/zuzhi.mp3" },
+  { hanzi: "夸奖",       pinyin: "kuā jiǎng",             img: "images/kuajiang.png",           audio: "audio/kuajiang.mp3" },
+  { hanzi: "懂事",       pinyin: "dǒng shì",              img: "images/dongshi.png",            audio: "audio/dongshi.mp3" }
+];
+
+/* ===== BUILD PRACTICE BUTTONS ===== */
+const practiceGrid = document.getElementById("practiceGrid");
+practiceItems.forEach((item, i) => {
+  const btn = document.createElement("div");
+  btn.className = "practice-btn";
+  btn.innerHTML = `<span class="num">${i + 1}</span> ${item.label}`;
+  btn.addEventListener("click", () => openPracticeModal(i));
+  practiceGrid.appendChild(btn);
+});
+
+/* ===== BUILD VOCAB CARDS ===== */
+const grid = document.getElementById("grid");
+vocabItems.forEach((item, i) => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <img class="thumb" src="${item.img}" alt="${item.hanzi}" loading="lazy">
+    <div class="label">
+      <div class="pinyin">${item.pinyin}</div>
+      <div class="hanzi">${item.hanzi}</div>
+    </div>`;
+  card.addEventListener("click", () => openVocabModal(i));
+  grid.appendChild(card);
+});
+
+/* ===== VOCAB MODAL ===== */
+let currentAudio = null;
+const vocabOverlay = document.getElementById("vocabOverlay");
+
+function openVocabModal(index) {
+  const item = vocabItems[index];
+  document.getElementById("vocabModalImg").src = item.img;
+  document.getElementById("vocabModalPinyin").textContent = item.pinyin;
+  document.getElementById("vocabModalHanzi").textContent = item.hanzi;
+  currentAudio = new Audio(item.audio);
+  vocabOverlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+function closeVocabModal() {
+  vocabOverlay.classList.remove("active");
+  document.body.style.overflow = "";
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+}
+document.getElementById("vocabPlayBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (currentAudio) { currentAudio.currentTime = 0; currentAudio.play(); }
+});
+vocabOverlay.addEventListener("click", (e) => { if (e.target === vocabOverlay) closeVocabModal(); });
+
+/* ===== PRACTICE MODAL ===== */
+const practiceOverlay = document.getElementById("practiceOverlay");
+let practiceAudio = null;
+
+/* Convert text to ruby HTML: each char gets pinyin on top */
+function textToRuby(text, pinyinStr) {
+  const pinyinParts = pinyinStr.split(/\s+/);
+  const chars = [];
+  for (const ch of text) {
+    chars.push(ch);
+  }
+  /* Filter: only CJK chars get pinyin, punctuation stays plain */
+  let pi = 0;
+  let html = "";
+  for (const ch of chars) {
+    if (/[\u4e00-\u9fff]/.test(ch)) {
+      const py = pi < pinyinParts.length ? pinyinParts[pi] : "";
+      html += `<ruby>${ch}<rt>${py}</rt></ruby>`;
+      pi++;
+    } else {
+      html += ch;
+    }
+  }
+  return html;
+}
+
+function openPracticeModal(index) {
+  const item = practiceItems[index];
+  document.getElementById("pmHeader").textContent = item.label;
+
+  /* Build ruby-annotated sentence */
+  const rubyHtml = textToRuby(item.text, item.pinyin);
+  document.getElementById("pmSentence").innerHTML = rubyHtml;
+
+  practiceAudio = new Audio(item.audio);
+  practiceOverlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+function closePracticeModal() {
+  practiceOverlay.classList.remove("active");
+  document.body.style.overflow = "";
+  if (practiceAudio) { practiceAudio.pause(); practiceAudio = null; }
+}
+document.getElementById("practicePlayBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (practiceAudio) { practiceAudio.currentTime = 0; practiceAudio.play(); }
+});
+practiceOverlay.addEventListener("click", (e) => { if (e.target === practiceOverlay) closePracticeModal(); });
+
+/* ESC to close any modal */
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { closeVocabModal(); closePracticeModal(); }
+});
+
+/* ===== TAB SYSTEM ===== */
+const tabData = {
+  0: [ // 看图说话
+    {
+      audio: "audio/tab_kaitou.mp3",
+      pinyin: "zhè fú tú piàn miáo huì de shì kè shì lǐ de qíng jǐng kè shì lǐ yǒu hěn duō rén yǒu de zài mā zhuō zi yǒu de zài sǎo dì wǒ rèn wéi xiàn zài shì fàng xué shí jiān",
+      text: "这幅图片描绘的是课室里的情景。课室里有很多人，有的在抹桌子，有的在扫地。我认为现在是放学时间。"
+    },
+    {
+      audio: "audio/tab_miaoshu.mp3",
+      pinyin: "zài tú piàn de zuǒ shàng jiǎo yǒu yī gè nán tóng xué zhàn zài yǐ zi shàng cā bái bǎn tā de tóng xué bāng tā fú zhe yǐ zi bì miǎn tā diē dǎo wǒ rèn wéi tā men bāng lǎo shī cā bái bǎn zhè me zuò shì duì de yīn wèi tā men bāng zhù lǎo shī huì ràng lǎo shī kāi xīn kě shì tā men zhàn zài yǐ zi shàng shì bù duì de yīn wèi tā kě néng huì cóng yǐ zi shàng diē xià shòu shāng kàn dào tā men zhè me zuò wǒ hěn dān xīn rú guǒ wǒ zài chǎng wǒ huì jiào nà ge nán shēng cóng yǐ zi shàng xià lái rán hòu qù zhǎo lǎo shī huò zhě qīng jié gōng rén bāng máng zài tú piàn de zuǒ xià jiǎo yǒu yī gè nán tóng xué ná zhe mā bù tā shǒu lǐ de mā bù hái dī zhe shuǐ bǎ dì bǎn nòng shī le wǒ rèn wéi tā zhè me zuò shì cuò de yīn wèi dì shàng de shuǐ kě néng huì ràng rén huá dǎo shòu shāng rú guǒ bié rén cǎi le dì shàng de shuǐ rán hòu dào chù zǒu dòng huì ràng kè shì biàn de hěn zāng kàn dào tā zhè me zuò wǒ hěn shēng qì rú guǒ wǒ zài chǎng wǒ huì jiào tā bǎ mā bù nǐng gān yě huì jiào tā bǎ dì shàng cā gān jìng zài tú piàn de yòu shàng jiǎo wǒ kàn dào yī gè nǚ tóng xué zài yòng mā bù cā chuāng hù wǒ hái kàn dào yǒu liǎng gè nán tóng xué zài wán nǐ zhuī wǒ pǎo de yóu xì wǒ rèn wéi tā men zhè me zuò shì cuò de yīn wèi tā men kě néng huì zhuàng dào bié rén yě kě néng huì diē dǎo shòu shāng tā men yīng gāi bāng tóng xué men bǎ kè shì dǎ sǎo gān jìng kàn dào tā men zhè me zuò wǒ hěn shēng qì rú guǒ wǒ zài chǎng wǒ huì jiào tā men bù yào wán nào hái huì qǐng tā men mǎ shàng qù bāng tóng xué men dǎ sǎo kè shì zài tú piàn de zhōng jiān wǒ kàn dào liǎng gè nǚ tóng xué zài yòng sǎo bǎ sǎo dì wǒ rèn wéi tā men zhè me zuò shì duì de yīn wèi tā men bǎ kè shì dǎ sǎo gān jìng dà jiā zài gān jìng de kè shì lǐ xué xí huì gèng kāi xīn kàn dào tā men zhè me zuò wǒ jué de hěn kāi xīn rú guǒ wǒ zài chǎng wǒ huì chēng zàn tā men shì dǒng shì de hǎo hái zi",
+      text: "在图片的左上角，有一个男同学站在椅子上擦白板，他的同学帮他扶着椅子，避免他跌倒。我认为他们帮老师擦白板，这么做是对的，因为他们帮助老师，会让老师开心。可是他们站在椅子上是不对的，因为他可能会从椅子上跌下受伤。看到他们这么做，我很担心，如果我在场，我会叫那个男生从椅子上下来，然后去找老师或者清洁工人帮忙。\n\n在图片的左下角，有一个男同学拿着抹布。他手里的抹布还滴着水，把地板弄湿了。我认为他这么做是错的，因为地上的水可能会让人滑倒受伤，如果别人踩了地上的水，然后到处走动，会让课室变得很脏。看到他这么做，我很生气，如果我在场，我会叫他把抹布拧干，也会叫他把地上擦干净。\n\n在图片的右上角，我看到一个女同学在用抹布擦窗户，我还看到有两个男同学在玩你追我跑的游戏。我认为他们这么做是错的，因为他们可能会撞到别人，也可能会跌倒受伤，他们应该帮同学们把课室打扫干净。看到他们这么做，我很生气，如果我在场，我会叫他们不要玩闹，还会请他们马上去帮同学们打扫课室。\n\n在图片的中间，我看到两个女同学在用扫把扫地。我认为她们这么做是对的，因为她们把课室打扫干净，大家在干净的课室里学习会更开心。看到她们这么做，我觉得很开心，如果我在场，我会称赞她们是懂事的好孩子。"
+    },
+    {
+      audio: "audio/tab_zongjie.mp3",
+      pinyin: "zǒng zhī kè shì shì wǒ men shàng kè hé xué xí de dì fāng wǒ men yīng gāi bǎo chí kè shì zhěng jié zài kè shì lǐ yě yīng gāi zhù yì ān quán bù yīng gāi luàn diū lā jī yě bù yīng gāi zài kè shì lǐ wán nào",
+      text: "总之，课室是我们上课和学习的地方，我们应该保持课室整洁，在课室里也应该注意安全，不应该乱丢垃圾，也不应该在课室里玩闹。"
+    }
+  ],
+  1: [ // 会话
+    {
+      audio: "audio/tab_jingli.mp3",
+      pinyin: "yǒu yī cì wǒ men zài měi shù kè jiǎn zhǐ xià kè hòu wǒ men fā xiàn kè shì biàn de hěn zāng luàn dì shàng dōu shì xiǎo zhǐ zhāng yú shì yǒu xiē tóng xué jiù ná sǎo bǎ sǎo dì ér wǒ hé qí tā tóng xué jiù bǎ zhǐ zhāng jiǎn qǐ lái diū jìn lā jī tǒng guò le yī huì er wǒ hé tóng xué men bǎ kè shì dǎ sǎo de gān gān jìng jìng",
+      text: "有一次，我们在美术课剪纸。下课后，我们发现课室变得很脏乱，地上都是小纸张。于是，有些同学就拿扫把扫地，而我和其他同学就把纸张捡起来，丢进垃圾桶。过了一会儿，我和同学们把课室打扫得干干净净。"
+    },
+    {
+      audio: "audio/tab_ganshou.mp3",
+      pinyin: "kàn dào dà jiā fēn gōng hé zuò bǎ kè shì dǎ sǎo gān jìng wǒ jué de hěn gāo xìng",
+      text: "看到大家分工合作，把课室打扫干净，我觉得很高兴。"
+    },
+    {
+      audio: "audio/tab_kanfa.mp3",
+      pinyin: "wǒ rèn wéi wǒ men yī qǐ bǎo chí kè shì gān jìng shì duì de yīn wèi kè shì shì wǒ men dà jiā de suǒ yǐ wǒ men yǒu zé rèn bǎo chí kè shì gān jìng",
+      text: "我认为我们一起保持课室干净是对的。因为课室是我们大家的，所以我们有责任保持课室干净。"
+    }
+  ]
+};
+
+/* Populate tab contents */
+function buildTabContent(bigIdx, smallIdx) {
+  const data = tabData[bigIdx][smallIdx];
+  const el = document.getElementById(`st${bigIdx}_${smallIdx}`);
+  const rubyHtml = textToRuby(data.text.replace(/\n/g, ""), data.pinyin);
+  const displayHtml = data.text.replace(/\n\n/g, "<br><br>");
+  /* Rebuild with line breaks preserved */
+  const paragraphs = data.text.split("\n\n");
+  let pinyinOffset = 0;
+  const pinyinParts = data.pinyin.split(/\s+/);
+  let fullHtml = "";
+  for (const para of paragraphs) {
+    const cleanPara = para.replace(/\n/g, "");
+    let paraHtml = "";
+    for (const ch of cleanPara) {
+      if (/[\u4e00-\u9fff]/.test(ch)) {
+        const py = pinyinOffset < pinyinParts.length ? pinyinParts[pinyinOffset] : "";
+        paraHtml += `<ruby>${ch}<rt>${py}</rt></ruby>`;
+        pinyinOffset++;
+      } else {
+        paraHtml += ch;
+      }
+    }
+    fullHtml += paraHtml + "<br><br>";
+  }
+
+  el.innerHTML = `
+    <div class="tab-text-block">${fullHtml}</div>
+    <div class="tab-speaker-row">
+      <button class="tab-speaker-btn" onclick="playTabAudio('${data.audio}')">
+        <span class="icon">&#128266;</span><span>播放朗读</span>
+      </button>
+    </div>`;
+}
+
+for (let b = 0; b < 2; b++) {
+  for (let s = 0; s < 3; s++) {
+    buildTabContent(b, s);
+  }
+}
+
+let tabAudioCurrent = null;
+function playTabAudio(src) {
+  if (tabAudioCurrent) { tabAudioCurrent.pause(); }
+  tabAudioCurrent = new Audio(src);
+  tabAudioCurrent.play();
+}
+
+function switchBigTab(idx) {
+  document.querySelectorAll(".big-tab").forEach((t, i) => t.classList.toggle("active", i === idx));
+  document.querySelectorAll(".big-tab-content").forEach((c, i) => c.classList.toggle("active", i === idx));
+  if (tabAudioCurrent) { tabAudioCurrent.pause(); tabAudioCurrent = null; }
+}
+
+function switchSmallTab(bigIdx, smallIdx) {
+  const container = document.getElementById(`bigTab${bigIdx}`);
+  container.querySelectorAll(".small-tab").forEach((t, i) => t.classList.toggle("active", i === smallIdx));
+  container.querySelectorAll(".small-tab-content").forEach((c, i) => c.classList.toggle("active", i === smallIdx));
+  if (tabAudioCurrent) { tabAudioCurrent.pause(); tabAudioCurrent = null; }
+}
+</script>
+</body>
+</html>
